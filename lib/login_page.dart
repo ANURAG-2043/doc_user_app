@@ -70,6 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                
                 const SizedBox(height: 30),
                 TextFormField(
                   controller: emailController,

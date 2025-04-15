@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Task Management',
+      title: 'Doc Secure',
       theme: ThemeData(
         fontFamily: 'Cera Pro',
         elevatedButtonTheme: ElevatedButtonThemeData(
