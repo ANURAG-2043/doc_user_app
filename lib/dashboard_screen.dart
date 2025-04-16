@@ -1,7 +1,10 @@
+import 'package:app/login_page.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'folder_page.dart';
 import 'profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/biometric_service.dart';  // Make sure this path is correct
 
 class DashboardScreen extends StatefulWidget {
   final String userName;
@@ -76,12 +79,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              final Future<SharedPreferences> prefs =
+                    SharedPreferences.getInstance();
+                prefs.then((SharedPreferences prefs) {
+                  prefs.setBool('isloggedin', false);
+                  prefs.setBool('isbiometricenabled', false);
+                });
               await _authService.signOut();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                    (route) => false,
-              );
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false,
+                );
+              }
             },
           ),
         ],
@@ -135,17 +146,35 @@ class FoldersSection extends StatelessWidget {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+        child: Column(  // Changed from GridView.count directly to Column
           children: [
-            _buildFolder('Finances', '💰', context),
-            _buildFolder('Health', '🏥', context),
-            _buildFolder('Identity', '🪪', context),
-            _buildFolder('Education', '🎓', context),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              children: [
+                _buildFolder('Finances', '💰', context),
+                _buildFolder('Health', '🏥', context),
+                _buildFolder('Identity', '🪪', context),
+                _buildFolder('Education', '🎓', context),
+              ],
+            ),
+            const SizedBox(height: 20),  // Add some spacing
+            ElevatedButton(
+              onPressed: () async {
+                bool success = await BiometricService().authenticateWithBiometrics();
+                if (success) {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('isBiometricAdded', true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Biometric authentication enabled')),
+                  );
+                }
+              },
+              child: const Text('Enable Biometric Login'),
+            ),
           ],
         ),
       ),
